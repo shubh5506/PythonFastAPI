@@ -1,6 +1,8 @@
 from fastapi import FastAPI, HTTPException
 from scalar_fastapi import get_scalar_api_reference
 
+from shipmentschema import Shipment, ShipmentPatch
+
 app = FastAPI()
 
 shipmentdata = [
@@ -8,6 +10,8 @@ shipmentdata = [
     {"id": 2, "item": "Phone", "quantity": 5, "status": "delivered"},
     {"id": 3, "item": "Tablet", "quantity": 3, "status": "pending"}, 
 ]
+
+   
 
 @app.get("/shipment")
 async def get_shipment():
@@ -39,10 +43,20 @@ def search_shipment(shipment_id: int):
     
 @app.post("/shipments/add")
 def add_shipment(item: str, quantity: int, status: str):
-    if status != "pending" or quantity > 99:
+    if status != "pending":
         raise HTTPException(status_code=406, detail="Status must be 'pending' for new shipments and quantity must not exceed 99.")
     new_id = max(s["id"] for s in shipmentdata) + 1
     new_shipment = {"id": new_id, "item": item, "quantity": quantity, "status": status}
+    shipmentdata.append(new_shipment)
+    return {"message": "Shipment added successfully", "shipment": new_shipment}
+
+    
+@app.post("/shipments-models/add")
+def add_shipment_models(shipment: Shipment):
+    if shipment.status != "pending":
+        raise HTTPException(status_code=406, detail="Status must be 'pending' for new shipments")
+    new_id = max(s["id"] for s in shipmentdata) + 1
+    new_shipment = {"id": new_id, "item": shipment.item, "quantity": shipment.quantity, "status": shipment.status}
     shipmentdata.append(new_shipment)
     return {"message": "Shipment added successfully", "shipment": new_shipment}
 
@@ -70,15 +84,23 @@ def patch_shipment(shipment_id: int, status: str = None, quantity: int = None, i
     return {"message": "Shipment patched successfully", "shipment": shipment}
 
 @app.patch("/shipments/partial-update/{shipment_id}")
-def partial_update_shipment(shipment_id: int, body: dict):
+def partial_update_shipment(
+    shipment_id: int,
+    body: ShipmentPatch
+):
     shipment = next((s for s in shipmentdata if s["id"] == shipment_id), None)
     if not shipment:
         raise HTTPException(status_code=404, detail="Shipment not found")
-    for key, value in body.items():
-        if key in shipment:
-            shipment[key] = value
-    return {"message": "Shipment updated successfully", "shipment": shipment}
 
+    update_data = body.model_dump(exclude_unset=True)
+
+    for key, value in update_data.items():
+        shipment[key] = value
+
+    return {
+        "message": "Shipment updated successfully",
+        "shipment": shipment
+    }
 @app.delete("/shipments/delete/{shipment_id}")
 def delete_shipment(shipment_id: int):
     global shipmentdata
