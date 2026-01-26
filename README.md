@@ -5,17 +5,17 @@ Perfect starter backend project to showcase API development skills.
 
 ### Features
 
-# Create new shipping items
-# Get all shipping items
-# Get item by ID
-# Update item details
-# Delete an item
-# Request validation using Pydantic
-# Interactive API docs using Swagger UI (/docs)
+#Create new shipping items
+#Get all shipping items
+#Get item by ID
+#Update item details
+#Delete an item
+#Request validation using Pydantic
+#Interactive API docs using Swagger UI (/docs)
 
 ### Tech Stack
 
-#  Python 3.10+
-#  FastAPI
-#  Uvicorn
-#  Pydantic
+#Python 3.10+
+#FastAPI
+#Uvicorn
+#Pydantic
