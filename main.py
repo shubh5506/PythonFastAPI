@@ -1,16 +1,21 @@
 from fastapi import FastAPI, HTTPException
 from scalar_fastapi import get_scalar_api_reference
-
+from datetime import datetime, timedelta    
 from shipmentschema import Shipment, ShipmentPatch
+from typing import List
 
 app = FastAPI()
 
 shipmentdata = [
-    {"id": 1, "item": "Laptop", "quantity": 2, "status": "in transit"},
-    {"id": 2, "item": "Phone", "quantity": 5, "status": "delivered"},
-    {"id": 3, "item": "Tablet", "quantity": 3, "status": "pending"}, 
+    {"id": 1, "item": "Laptop", "quantity": 2, "status": "in transit", "order_date": datetime.now(), "is_duplicate": False},
+    {"id": 2, "item": "Phone", "quantity": 5, "status": "delivered", "order_date": datetime.now(), "is_duplicate": False},
+    {"id": 3, "item": "Tablet", "quantity": 3, "status": "pending", "order_date": datetime.now(), "is_duplicate": False}, 
 ]
 
+DUPLICATE_WINDOW = timedelta(minutes=5)
+
+shipments: List["Shipment"] = []
+current_id = 1
    
 
 @app.get("/shipment")
@@ -110,6 +115,29 @@ def delete_shipment(shipment_id: int):
     shipmentdata = [s for s in shipmentdata if s["id"] != shipment_id]
     return {"message": "Shipment deleted{shipment_Id} successfully"}
 
+def is_duplicate(shipment: Shipment) -> bool:
+    for existing_shipment in shipments:
+        if (existing_shipment.item == shipment.item and
+            existing_shipment.quantity == shipment.quantity and
+            existing_shipment.status == shipment.status):
+            time_diff = abs(shipment.order_date - existing_shipment.order_date)
+            if time_diff < DUPLICATE_WINDOW:
+                return True
+    return False
+
+@app.post("/shipments/check-duplicate")
+def check_duplicate(shipment: Shipment):
+    global current_id
+    shipment.is_duplicate = is_duplicate(shipment)
+    shipment.id = current_id
+    current_id += 1
+    shipments.append(shipment)
+    return {"shipment": shipment, "is_duplicate": shipment.is_duplicate}
+
+@app.get("/shipments/duplicate-shipments")
+def get_duplicate_shipments():
+    return {"duplicate_shipments": [s for s in shipments if s.is_duplicate]}
+
 @app.get("/scalar", include_in_schema=False)
 def get_scalar():
     return get_scalar_api_reference(
@@ -117,3 +145,4 @@ def get_scalar():
         title="Shipment API Scalar Reference",
     )
         
+
