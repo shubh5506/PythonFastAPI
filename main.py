@@ -3,8 +3,21 @@ from scalar_fastapi import get_scalar_api_reference
 from datetime import datetime, timedelta    
 from shipmentschema import Shipment, ShipmentPatch
 from typing import List
+from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:3000",
+        "https://www.shubhamsarpal.com",
+        "https://shubhamsarpal.com",  
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 shipmentdata = [
     {"id": 1, "item": "Laptop", "quantity": 2, "status": "in transit", "order_date": datetime.now(), "is_duplicate": False},
