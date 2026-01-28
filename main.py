@@ -22,7 +22,7 @@ app.add_middleware(
 shipmentdata = [
     {"id": 1, "item": "Laptop", "quantity": 2, "status": "in transit", "order_date": datetime.now(), "is_duplicate": False},
     {"id": 2, "item": "Phone", "quantity": 5, "status": "delivered", "order_date": datetime.now(), "is_duplicate": False},
-    {"id": 3, "item": "Tablet", "quantity": 3, "status": "pending", "order_date": datetime.now(), "is_duplicate": False}, 
+    {"id": 3, "item": "Tablet", "quantity": 3, "status": "pending", "order_date": datetime.now(), "is_duplicate": True}, 
 ]
 
 DUPLICATE_WINDOW = timedelta(minutes=5)
